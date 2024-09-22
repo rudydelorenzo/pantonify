@@ -70,6 +70,15 @@ const svgElementToString = async (svgElement: Node): Promise<string> => {
         serializedString,
         "image/svg+xml",
     );
+
+    /* We need to embed the fonts as data URIs in the SVG. Why? Glad you asked. When we load the SVG into an
+     * <img> element (so we can then draw it on the canvas) the browser is very strict about not letting that <img>
+     * element establish any outbound network connections. Thus, when the <img> element tries to load the font from
+     * the URL (as determined by the @font-face.src property present in the global document stylesheet),
+     * the browser won't let it. To get around this we must define the @font-face declaration in the SVG itself,
+     * and instead of having the URL of the font file in the 'src' field, we swap it to be a data URI representation
+     * of what that URL points to. Got it? Good. I'm going to bed now
+     */
     const svgNS = "http://www.w3.org/2000/svg";
     const defs = xmlDocument.createElementNS(svgNS, "defs");
     const style = xmlDocument.createElementNS(svgNS, "style");
