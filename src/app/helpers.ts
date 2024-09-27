@@ -31,13 +31,16 @@ export const pythagoras = (w: number, h: number): number =>
 
 export const applyFunctionToObject = <
     T extends { [key: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
-    K extends (...args: any[]) => any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    L extends T[keyof T],
+    M extends any[], // eslint-disable-line @typescript-eslint/no-explicit-any
+    K extends (arg1: L, ...args: M) => any, // eslint-disable-line @typescript-eslint/no-explicit-any
 >(
     obj: T,
     fn: K,
+    ...args: M
 ): { [key in keyof T]: ReturnType<K> } => {
     for (const key in obj) {
-        obj[key] = fn(obj[key]);
+        obj[key] = fn(obj[key], ...args);
     }
     return obj;
 };
