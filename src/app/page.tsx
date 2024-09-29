@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { ArtDisplay } from "@/app/components/ArtDisplay";
 import {
     Button,
@@ -11,9 +11,26 @@ import {
     TextInput,
     Text,
     SegmentedControl,
+    Select,
 } from "@mantine/core";
-import { DEFAULT_PADDING_PERCENT, SRC_URL_REGEX } from "@/app/constants";
-import { blobToURI } from "@/app/helpers";
+import {
+    DEFAULT_PADDING_PERCENT,
+    MARGIN_PRESETS,
+    ORIENTATIONS,
+    PRINT_SIZES,
+    SRC_URL_REGEX,
+    UNITS,
+} from "@/app/constants";
+import { blobToURI, physicalSizeToString } from "@/app/helpers";
+import { useConfigStore } from "@/app/stores/config";
+import {
+    MarginPresetsType,
+    OrientationType,
+    PhysicalSize,
+    UnitsType,
+    ValueWithUnit,
+} from "@/app/types";
+import { useCanvasStore } from "@/app/stores/canvas";
 
 const downloadURI = (uri: string, name: string) => {
     const link = document.createElement("a");
@@ -90,32 +107,103 @@ const svgElementToString = async (svgElement: Node): Promise<string> => {
     return serializer.serializeToString(xmlDocument);
 };
 
-export default function Home() {
-    const [fileUri, setFileUri] = useState<string>();
-    const [topText, setTopText] = useState<string>("");
-    const [bottomText, setBottomText] = useState<string>("");
-    const [paddingPercentage, setPaddingPercentage] = useState<number>(
-        DEFAULT_PADDING_PERCENT,
+const getSizeOptions = (
+    orientation: OrientationType,
+    units: UnitsType,
+): { [key in string]: PhysicalSize } => {
+    const sizesInUnit = PRINT_SIZES.filter((item) => item[2] === units);
+    const sizes = sizesInUnit.map(
+        (size): PhysicalSize => ({
+            w: {
+                value:
+                    orientation === ORIENTATIONS.landscape
+                        ? Math.max(size[0], size[1])
+                        : Math.min(size[0], size[1]),
+                units,
+            },
+            h: {
+                value:
+                    orientation === ORIENTATIONS.landscape
+                        ? Math.min(size[0], size[1])
+                        : Math.max(size[0], size[1]),
+                units,
+            },
+        }),
     );
-    const [dateText, setDateText] = useState<string>("");
+    const result: { [key in string]: PhysicalSize } = {};
+    for (const size of sizes) {
+        result[physicalSizeToString(size)] = size;
+    }
+    return result;
+};
+
+const getMarginOptions = (
+    presets: MarginPresetsType,
+    units: UnitsType,
+): Record<string, MarginPresetsType[keyof MarginPresetsType][UnitsType]> => {
+    const result: Record<
+        string,
+        MarginPresetsType[keyof MarginPresetsType][UnitsType]
+    > = {};
+    let size: keyof typeof presets;
+    for (size in presets) {
+        result[size] = presets[size][units];
+    }
+
+    return result;
+};
+
+export default function Home() {
+    const { setPrintSize, printSize, pixelSize } = useCanvasStore();
+    const configStore = useConfigStore();
+    const [units, setUnits] = useState<UnitsType>(UNITS.cm);
+    const [orientation, setOrientation] = useState<OrientationType>(
+        ORIENTATIONS.portrait,
+    );
+    const [sizeOptions, setSizeOptions] = useState<{
+        [key in string]: PhysicalSize;
+    }>(getSizeOptions(orientation, units));
+    const [marginOptions, setMarginOptions] = useState(
+        getMarginOptions(MARGIN_PRESETS, units),
+    );
+    const [marginSizeLocalState, setMarginSizeLocalState] = useState<
+        keyof typeof marginOptions
+    >(Object.keys(marginOptions)[1]);
+
     const svgCanvasElement = useRef<SVGSVGElement | null>(null);
 
+    useEffect(() => {
+        setSizeOptions(getSizeOptions(orientation, units));
+        setMarginOptions(getMarginOptions(MARGIN_PRESETS, units));
+        setPrintSize(null);
+    }, [units, orientation]);
+
+    const handleUnitsChange = (value: string) => {
+        setUnits(value as UnitsType);
+    };
     const handleFileChange = async (payload: File | null) => {
         if (payload) {
-            setFileUri(await blobToURI(payload));
+            configStore.setImageUrl((await blobToURI(payload)) || "");
         }
     };
     const handleTopTextChange = (event: ChangeEvent<HTMLInputElement>) => {
-        setTopText(event.target.value);
+        configStore.setTopText(event.target.value);
     };
     const handleBottomTextChange = (event: ChangeEvent<HTMLInputElement>) => {
-        setBottomText(event.target.value);
+        configStore.setBottomText(event.target.value);
     };
     const handleDateTextChange = (event: ChangeEvent<HTMLInputElement>) => {
-        setDateText(event.target.value);
+        configStore.setDateText(event.target.value);
     };
-    const handlePaddingPercentChange = (value: string) => {
-        setPaddingPercentage(Number.parseFloat(value));
+    const handleMarginChange = (value: string) => {
+        const marginValue = marginOptions[value];
+        setMarginSizeLocalState(value);
+        if (marginValue) {
+            configStore.setMargin(marginValue);
+        }
+    };
+    const handlePrintSizeChange = (value: string | null) => {
+        setPrintSize(value ? sizeOptions[value] : null);
     };
     const handleRenderImage = async () => {
         const canvas = document.createElement("canvas");
@@ -139,7 +227,10 @@ export default function Home() {
                 ctx.drawImage(img, 0, 0, w, h);
                 URL.revokeObjectURL(url);
                 const png_img = canvas.toDataURL("image/png");
-                downloadURI(png_img, `EXPORT_${topText}_${bottomText}.png`);
+                downloadURI(
+                    png_img,
+                    `EXPORT_${configStore.topText}_${configStore.topText}.png`,
+                );
             };
             img.src = url;
         }
@@ -150,13 +241,14 @@ export default function Home() {
             <Flex gap={"5rem"}>
                 <div style={{ height: "90vh" }}>
                     <Center mih={"100%"}>
-                        {fileUri ? (
+                        {configStore.imageUrl !== "" && pixelSize ? (
                             <ArtDisplay
-                                imageURL={fileUri}
-                                topText={topText}
-                                bottomText={bottomText}
-                                dateText={dateText}
-                                paddingPercent={paddingPercentage}
+                                imageURL={configStore.imageUrl}
+                                topText={configStore.topText}
+                                bottomText={configStore.bottomText}
+                                dateText={configStore.dateText}
+                                margin={configStore.margin}
+                                imageSize={pixelSize}
                                 svgRef={svgCanvasElement}
                             />
                         ) : (
@@ -166,6 +258,40 @@ export default function Home() {
                 </div>
                 <Center>
                     <Stack>
+                        <SegmentedControl
+                            value={`${units}`}
+                            onChange={handleUnitsChange}
+                            data={[
+                                { label: "cm", value: UNITS.cm },
+                                { label: "in", value: UNITS.in },
+                            ]}
+                            transitionDuration={250}
+                            transitionTimingFunction={"linear"}
+                        />
+                        <SegmentedControl
+                            value={`${orientation}`}
+                            onChange={(val) =>
+                                setOrientation(val as OrientationType)
+                            }
+                            data={[
+                                ORIENTATIONS.portrait,
+                                ORIENTATIONS.landscape,
+                            ]}
+                            transitionDuration={250}
+                            transitionTimingFunction={"linear"}
+                        />
+                        <Select
+                            label={"Print size (W x H)"}
+                            data={Object.keys(sizeOptions)}
+                            // caution: passing in undefined will cause unpredictable behaviour
+                            value={
+                                printSize
+                                    ? physicalSizeToString(printSize)
+                                    : null
+                            }
+                            onChange={handlePrintSizeChange}
+                            allowDeselect={false}
+                        />
                         <FileInput
                             label={"Image"}
                             placeholder={"Pick an image..."}
@@ -173,44 +299,28 @@ export default function Home() {
                         />
                         <TextInput
                             label={"Title"}
-                            value={topText}
+                            value={configStore.topText}
                             placeholder={"Pantone"}
                             onChange={handleTopTextChange}
                         />
                         <TextInput
                             label={"Subtitle"}
-                            value={bottomText}
+                            value={configStore.bottomText}
                             placeholder={"Sub Title"}
                             onChange={handleBottomTextChange}
                         />
                         <TextInput
                             label={"Date"}
-                            value={dateText}
+                            value={configStore.dateText}
                             placeholder={"Date text"}
                             onChange={handleDateTextChange}
                         />
                         <SegmentedControl
-                            value={`${paddingPercentage}`}
-                            onChange={handlePaddingPercentChange}
-                            data={[
-                                { label: "None", value: (0).toString() },
-                                {
-                                    label: "Small",
-                                    value: (
-                                        DEFAULT_PADDING_PERCENT / 2
-                                    ).toString(),
-                                },
-                                {
-                                    label: "Regular",
-                                    value: DEFAULT_PADDING_PERCENT.toString(),
-                                },
-                                {
-                                    label: "Large",
-                                    value: (
-                                        DEFAULT_PADDING_PERCENT * 2
-                                    ).toString(),
-                                },
-                            ]}
+                            value={marginSizeLocalState}
+                            onChange={handleMarginChange}
+                            data={Object.keys(marginOptions)}
+                            transitionDuration={250}
+                            transitionTimingFunction={"ease"}
                         />
                         <Button onClick={handleRenderImage}>
                             Export as PNG...

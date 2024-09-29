@@ -1,4 +1,7 @@
 // percentage
+import { MarginPresetsType, PhysicalSize, UnitsType } from "@/app/types";
+import { generateAllMarginsFromCm } from "@/app/helpers";
+
 export const DEFAULT_PADDING_PERCENT = 0.06;
 
 export const FONT_SIZE_MULTIPLIER = 0.05;
@@ -8,8 +11,28 @@ export const SRC_URL_REGEX = /src:\s*url\(['"]?([^'")]+)['"]?\)/;
 export const DEFAULT_PPI = 300;
 
 export const UNITS = {
-    cm: "centimeters",
-    in: "inches",
+    cm: "cm",
+    in: "in",
+} as const;
+
+export const MARGIN_SIZES = ["none", "sm", "md", "lg", "xl"] as const;
+
+const _MARGINS_IN_CM: {
+    [key in (typeof MARGIN_SIZES)[number]]: number;
+} = {
+    none: 0,
+    sm: 0.25,
+    md: 1,
+    lg: 2,
+    xl: 3,
+};
+
+export const MARGIN_PRESETS: MarginPresetsType =
+    generateAllMarginsFromCm(_MARGINS_IN_CM);
+
+export const ORIENTATIONS = {
+    portrait: "Portrait",
+    landscape: "Landscape",
 } as const;
 
 export const PRINT_SIZES: [

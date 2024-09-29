@@ -1,9 +1,11 @@
 "use client";
 
 import { ReactNode, RefObject, useEffect, useState } from "react";
-import { Size } from "@/app/types";
+import { Size, ValueWithUnit } from "@/app/types";
 import { DEFAULT_PADDING_PERCENT, FONT_SIZE_MULTIPLIER } from "@/app/constants";
 import { SvgText } from "@/app/components/SvgText";
+import { useCanvasStore } from "@/app/stores/canvas";
+import { valueWithUnitsToPixels } from "@/app/helpers";
 
 const getMaxAxis = <T extends Size>(s: T): keyof T => {
     let largest: keyof T = (Object.keys(s) as (keyof T)[])[0];
@@ -20,37 +22,28 @@ export const ArtDisplay = ({
     topText,
     bottomText,
     dateText,
-    paddingPercent,
+    margin,
+    imageSize,
     svgRef,
 }: {
     imageURL?: string;
     topText: string;
     bottomText: string;
-    paddingPercent: number;
+    margin: ValueWithUnit;
+    imageSize: Size;
     dateText?: string;
     svgRef: RefObject<SVGSVGElement>;
 }): ReactNode => {
-    const [imageSize, setImageSize] = useState<Size>({ w: 0, h: 0 });
     const [paddingSize, setPaddingSize] = useState<Size>({ w: 0, h: 0 });
+    const { ppi } = useCanvasStore();
 
     useEffect(() => {
-        const imgElementTemporary = new Image();
-        if (imageURL) {
-            imgElementTemporary.src = imageURL;
-        }
-        imgElementTemporary.onload = () => {
-            setImageSize({
-                w: imgElementTemporary.width,
-                h: imgElementTemporary.height,
-            });
-        };
-    }, [imageURL]);
-    useEffect(() => {
+        console.log(margin);
         setPaddingSize({
-            w: paddingPercent * imageSize[getMaxAxis(imageSize)],
-            h: paddingPercent * imageSize[getMaxAxis(imageSize)],
+            w: valueWithUnitsToPixels(margin, ppi),
+            h: valueWithUnitsToPixels(margin, ppi),
         });
-    }, [imageSize, paddingPercent]);
+    }, [margin, ppi]);
 
     const largeFontSize = FONT_SIZE_MULTIPLIER * imageSize.h;
     const smallFontSize = largeFontSize / 2.5;

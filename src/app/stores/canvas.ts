@@ -1,41 +1,36 @@
 import { PhysicalSize, Size } from "@/app/types";
 import { create } from "zustand/react";
-import { DEFAULT_PPI, UNITS } from "@/app/constants";
+import { DEFAULT_PPI } from "@/app/constants";
 import { getPixelSizeFromPPI } from "@/app/helpers";
 
 type CanvasStoreState = {
-    pixelSize: Size;
+    pixelSize: Size | null;
     ppi: number;
-    actualSize: PhysicalSize;
+    printSize: PhysicalSize | null;
 };
 
 type CanvasStoreAction = {
-    setActualSize: (size: CanvasStoreState["actualSize"]) => void;
+    setPrintSize: (size: CanvasStoreState["printSize"]) => void;
     setPPI: (ppi: CanvasStoreState["ppi"]) => void;
 };
 
 export const useCanvasStore = create<CanvasStoreState & CanvasStoreAction>(
     (set) => ({
-        pixelSize: {
-            w: 0,
-            h: 0,
-        },
-        actualSize: {
-            w: 0,
-            h: 0,
-            units: UNITS.cm,
-        },
+        pixelSize: null,
+        printSize: null,
         ppi: DEFAULT_PPI,
-        setActualSize: (size) => {
+        setPrintSize: (size) => {
             set((state) => ({
-                actualSize: size,
-                pixelSize: getPixelSizeFromPPI(size, state.ppi),
+                printSize: size,
+                pixelSize: size ? getPixelSizeFromPPI(size, state.ppi) : null,
             }));
         },
         setPPI: (ppi) => {
             set((state) => ({
                 ppi: ppi,
-                pixelSize: getPixelSizeFromPPI(state.actualSize, ppi),
+                pixelSize: state.printSize
+                    ? getPixelSizeFromPPI(state.printSize, ppi)
+                    : null,
             }));
         },
     }),

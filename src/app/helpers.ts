@@ -1,5 +1,11 @@
-import { PhysicalSize, Size } from "@/app/types";
-import { UNITS } from "@/app/constants";
+import {
+    MarginPresetsType,
+    PhysicalSize,
+    Size,
+    UnitsType,
+    ValueWithUnit,
+} from "@/app/types";
+import { MARGIN_SIZES, UNITS } from "@/app/constants";
 
 export const blobToURI = async (
     blob: Blob | undefined,
@@ -49,17 +55,24 @@ export const getPixelSizeFromPPI = (
     physicalSize: PhysicalSize,
     ppi: number,
 ): Size => {
-    if (physicalSize.units === UNITS.cm) {
-        physicalSize = {
-            w: cmToInches(physicalSize.w),
-            h: cmToInches(physicalSize.h),
-            units: UNITS.in,
-        };
+    // definitely didn't waste an hour bc i forgot to clone the object...
+    physicalSize = { ...physicalSize };
+    let key: keyof PhysicalSize;
+    for (key in physicalSize) {
+        if (physicalSize[key].units === UNITS.in) {
+            physicalSize[key] = {
+                value: inchesToCm(physicalSize[key].value),
+                units: UNITS.cm,
+            };
+        }
     }
 
     // all units are inches here
-    const diagonalPrintSize = pythagoras(physicalSize.w, physicalSize.h);
-    const angle = Math.asin(physicalSize.h / diagonalPrintSize);
+    const diagonalPrintSize = pythagoras(
+        physicalSize.w.value,
+        physicalSize.h.value,
+    );
+    const angle = Math.asin(physicalSize.h.value / diagonalPrintSize);
     const diagonalPixelSize = diagonalPrintSize * ppi;
     // calculate w and h
     const sizeInPixels: Size = {
@@ -68,4 +81,42 @@ export const getPixelSizeFromPPI = (
     };
 
     return applyFunctionToObject(sizeInPixels, Math.round);
+};
+
+export const valueWithUnitsToPixels = (
+    valueWithUnit: ValueWithUnit,
+    ppi: number,
+): number => {
+    const val = { ...valueWithUnit };
+    if (val.units === UNITS.cm) {
+        val.value = cmToInches(val.value);
+        val.units = UNITS.in;
+    }
+
+    return ppi * val.value;
+};
+
+export const physicalSizeToString = (size: PhysicalSize): string => {
+    return `${size.w.value}${size.w.units} x ${size.h.value}${size.h.units}`;
+};
+
+export const generateAllMarginsFromCm = (marginsInCm: {
+    [key in (typeof MARGIN_SIZES)[number]]: number;
+}): MarginPresetsType => {
+    let key: keyof typeof marginsInCm;
+    const result: Record<string, { [key in UnitsType]: ValueWithUnit }> = {};
+    for (key in marginsInCm) {
+        const marginInCm = marginsInCm[key];
+        result[key] = {
+            [UNITS.cm]: {
+                value: marginInCm,
+                units: UNITS.cm,
+            },
+            [UNITS.in]: {
+                value: cmToInches(marginInCm),
+                units: UNITS.in,
+            },
+        };
+    }
+    return result as MarginPresetsType;
 };

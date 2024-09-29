@@ -1,7 +1,6 @@
-import { Size, ValueWithUnit } from "@/app/types";
+import { ValueWithUnit } from "@/app/types";
 import { create } from "zustand/react";
-import { DEFAULT_PPI, UNITS } from "@/app/constants";
-import { getPixelSizeFromPPI } from "@/app/helpers";
+import { UNITS } from "@/app/constants";
 
 type ConfigStoreState = {
     imageUrl: string;
@@ -19,28 +18,39 @@ type ConfigStoreAction = {
     setMargin: (amount: ConfigStoreState["margin"]) => void;
 };
 
-export const useCanvasStore = create<ConfigStoreState & ConfigStoreAction>(
+export const useConfigStore = create<ConfigStoreState & ConfigStoreAction>(
     (set) => ({
-        pixelSize: {
-            w: 0,
-            h: 0,
-        },
-        actualSize: {
-            w: 0,
-            h: 0,
+        imageUrl: "",
+        topText: "",
+        bottomText: "",
+        dateText: "",
+        margin: {
+            value: 0,
             units: UNITS.cm,
         },
-        ppi: DEFAULT_PPI,
-        setActualSize: (size) => {
-            set((state) => ({
-                actualSize: size,
-                pixelSize: getPixelSizeFromPPI(size, state.ppi),
+        setImageUrl: (url) => {
+            set(() => ({
+                imageUrl: url,
             }));
         },
-        setPPI: (ppi) => {
-            set((state) => ({
-                ppi: ppi,
-                pixelSize: getPixelSizeFromPPI(state.actualSize, ppi),
+        setTopText: (text) => {
+            set(() => ({
+                topText: text,
+            }));
+        },
+        setBottomText: (text) => {
+            set(() => ({
+                bottomText: text,
+            }));
+        },
+        setDateText: (text) => {
+            set(() => ({
+                dateText: text,
+            }));
+        },
+        setMargin: (amount) => {
+            set(() => ({
+                margin: amount,
             }));
         },
     }),
