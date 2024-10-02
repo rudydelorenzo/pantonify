@@ -19,6 +19,10 @@ type CanvasStoreState = {
 };
 
 type CanvasStoreAction = {
+    _setPixelSize: (
+        size: CanvasStoreState["printSize"],
+        ppi: CanvasStoreState["ppi"],
+    ) => void;
     setPrintSize: (size: CanvasStoreState["printSize"]) => void;
     setPPI: (ppi: CanvasStoreState["ppi"]) => void;
     setOrientation: (orientation: OrientationType) => void;
@@ -32,19 +36,38 @@ export const useCanvasStore = create<CanvasStoreState & CanvasStoreAction>(
         ppi: DEFAULT_PPI,
         units: DEFAULT_UNIT,
         orientation: ORIENTATIONS.portrait,
+        _setPixelSize: (physicalSize, ppi) => {
+            const pixelSize = physicalSize
+                ? getPixelSizeFromPPI(physicalSize, ppi)
+                : undefined;
+            const configState = useConfigStore.getState();
+            configState.setOffsets(configState.offsets, pixelSize);
+            set(() => {
+                return {
+                    pixelSize: pixelSize || null,
+                };
+            });
+        },
         setPrintSize: (size) => {
-            set((state) => ({
-                printSize: size,
-                pixelSize: size ? getPixelSizeFromPPI(size, state.ppi) : null,
-            }));
+            set((state) => {
+                state._setPixelSize(size, state.ppi);
+                return {
+                    printSize: size,
+                };
+            });
         },
         setPPI: (ppi) => {
-            set((state) => ({
-                ppi: ppi,
-                pixelSize: state.printSize
-                    ? getPixelSizeFromPPI(state.printSize, ppi)
-                    : null,
-            }));
+            set((state) => {
+                // change margins
+                const configStore = useConfigStore.getState();
+                configStore.setMargin(configStore.margin.withUnits, undefined);
+
+                state._setPixelSize(state.printSize, ppi);
+
+                return {
+                    ppi: ppi,
+                };
+            });
         },
         setOrientation: (orientation: OrientationType) => {
             set((state) => {
@@ -60,6 +83,7 @@ export const useCanvasStore = create<CanvasStoreState & CanvasStoreAction>(
                     .getState()
                     .setMargin(
                         MARGIN_PRESETS[DEFAULT_MARGIN_SIZE][state.units],
+                        state.ppi,
                     );
                 state.setPrintSize(null);
                 return {

@@ -51,7 +51,7 @@ const getMarginValue = (
 };
 
 export const MarginSelector = (): ReactNode => {
-    const { units, orientation } = useCanvasStore();
+    const { units, orientation, ppi } = useCanvasStore();
     const { setMargin, margin } = useConfigStore();
     const [showCustomBox, setShowCustomBox] = useState(false);
     const [customBoxInput, setCustomBoxInput] = useState<number>(
@@ -67,7 +67,7 @@ export const MarginSelector = (): ReactNode => {
     }, [units, orientation]);
 
     useEffect(() => {
-        setSliderValue(getMarginValue(margin, marginOptions));
+        setSliderValue(getMarginValue(margin.withUnits, marginOptions));
     }, [margin, marginOptions]);
 
     const handleMarginChange = (value: string) => {
@@ -77,7 +77,7 @@ export const MarginSelector = (): ReactNode => {
             setShowCustomBox(true);
             setCustomBoxInput(DEFAULT_CUSTOM_MARGIN);
         } else {
-            setMargin(marginValue);
+            setMargin(marginValue, ppi);
             setShowCustomBox(false);
         }
     };
@@ -91,10 +91,13 @@ export const MarginSelector = (): ReactNode => {
     };
 
     const handleClickApplyCustomMargin = () => {
-        setMargin({
-            value: customBoxInput,
-            units: units,
-        });
+        setMargin(
+            {
+                value: customBoxInput,
+                units: units,
+            },
+            ppi,
+        );
     };
 
     return (

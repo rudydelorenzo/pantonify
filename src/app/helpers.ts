@@ -5,7 +5,12 @@ import {
     UnitsType,
     ValueWithUnit,
 } from "@/app/types";
-import { MARGIN_SIZES, SRC_URL_REGEX, UNITS } from "@/app/constants";
+import {
+    FONT_SIZE_MULTIPLIER,
+    MARGIN_SIZES,
+    SRC_URL_REGEX,
+    UNITS,
+} from "@/app/constants";
 import { MutableRefObject } from "react";
 
 export const blobToURI = async (
@@ -250,4 +255,81 @@ export const getRealImageSize = async (
             });
         };
     });
+};
+
+export const getMaxAxis = <T extends Size>(s: T): keyof T => {
+    let largest: keyof T = (Object.keys(s) as (keyof T)[])[0];
+    for (const axis in s) {
+        if (s[largest] < s[axis]) {
+            largest = axis;
+        }
+    }
+    return largest;
+};
+
+export const getTextPadding = (pixelSize: Size): number =>
+    pixelSize[getMaxAxis(pixelSize)] * 0.02;
+
+export const getFontSizes = (
+    pixelSize: Size,
+): { largeFontSize: number; smallFontSize: number } => {
+    const largeFontSize =
+        FONT_SIZE_MULTIPLIER * pixelSize[getMaxAxis(pixelSize)];
+    const smallFontSize = largeFontSize / 2.5;
+
+    return {
+        largeFontSize,
+        smallFontSize,
+    };
+};
+
+export const getImageFrameSize = (pixelSize: Size, marginSize: Size): Size => {
+    const { largeFontSize, smallFontSize } = getFontSizes(pixelSize);
+
+    return {
+        w: pixelSize.w - 2 * marginSize.w,
+        h:
+            pixelSize.h -
+            marginSize.h -
+            smallFontSize -
+            largeFontSize -
+            4 * getTextPadding(pixelSize),
+    };
+};
+
+export const computeImageDimensions = (
+    imageSize: Size,
+    imageFrameSize: Size,
+): { width: number; height: number } => {
+    // Calculate the aspect ratios
+    const imageAspectRatio = imageSize.w / imageSize.h;
+    const containerAspectRatio = imageFrameSize.w / imageFrameSize.h;
+
+    let finalWidth, finalHeight;
+    // Compare aspect ratios to determine whether to scale based on width or height
+    if (imageAspectRatio > containerAspectRatio) {
+        // Image is wider than container, scale based on height
+        finalHeight = imageFrameSize.h;
+        finalWidth = imageFrameSize.h * imageAspectRatio;
+    } else {
+        // Image is taller than container, scale based on width
+        finalWidth = imageFrameSize.w;
+        finalHeight = imageFrameSize.w / imageAspectRatio;
+    }
+    return { width: finalWidth, height: finalHeight };
+};
+
+export const computeMaximumOffsets = (
+    imageSize: Size,
+    imageFrameSize: Size,
+): Size => {
+    const finalImageDimensions = computeImageDimensions(
+        imageSize,
+        imageFrameSize,
+    );
+
+    return {
+        w: -(finalImageDimensions.width - imageFrameSize.w),
+        h: -(finalImageDimensions.height - imageFrameSize.h),
+    };
 };
