@@ -232,3 +232,22 @@ export const exportAndSaveImage = async (
         }
     });
 };
+
+export const getRealImageSize = async (
+    imageUrl: string | null,
+): Promise<Size> => {
+    return new Promise((resolve) => {
+        const imgElementTemporary = new Image();
+        if (imageUrl) {
+            imgElementTemporary.src = imageUrl;
+        } else {
+            return null;
+        }
+        imgElementTemporary.onload = () => {
+            resolve({
+                w: imgElementTemporary.width,
+                h: imgElementTemporary.height,
+            });
+        };
+    });
+};

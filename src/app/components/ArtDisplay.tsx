@@ -74,26 +74,10 @@ export const ArtDisplay = ({
     svgRef: RefObject<SVGSVGElement>;
 }): ReactNode => {
     const [paddingSize, setPaddingSize] = useState<Size>({ w: 0, h: 0 });
-    const [realImageSize, setRealImageSize] = useState<Size>({ w: 0, h: 0 });
     const [imageOffset, setImageOffset] = useState<Size>({ w: 0, h: 0 });
     const { pixelSize, ppi } = useCanvasStore();
-    const { imageUrl, topText, bottomText, dateText, margin } =
-        useConfigStore();
+    const { image, topText, bottomText, dateText, margin } = useConfigStore();
     const imageElementRef = useRef<SVGImageElement>(null);
-
-    useEffect(() => {
-        const imgElementTemporary = new Image();
-        if (imageUrl) {
-            imgElementTemporary.src = imageUrl;
-        }
-        imgElementTemporary.onload = () => {
-            setRealImageSize({
-                w: imgElementTemporary.width,
-                h: imgElementTemporary.height,
-            });
-        };
-        setImageOffset({ h: 0, w: 0 });
-    }, [imageUrl]);
 
     useEffect(() => {
         console.log(margin);
@@ -104,7 +88,8 @@ export const ArtDisplay = ({
     }, [margin, ppi]);
 
     const handleDrag = (e: MouseEvent) => {
-        const maxOffsets = computeMaximumOffsets(realImageSize, imageFrameSize);
+        if (!image?.size) return;
+        const maxOffsets = computeMaximumOffsets(image.size, imageFrameSize);
         const newProspectiveOffsets = {
             w: Math.min(
                 Math.max(
@@ -128,7 +113,7 @@ export const ArtDisplay = ({
         onDrag: handleDrag,
     });
 
-    const shouldRender = imageUrl && imageUrl !== "" && pixelSize;
+    const shouldRender = image && image.url && pixelSize;
 
     if (!shouldRender) {
         return (
@@ -190,11 +175,11 @@ export const ArtDisplay = ({
                 </clipPath>
             </defs>
             <image
-                href={imageUrl}
+                href={image.url}
                 ref={imageElementRef}
                 x={paddingSize.w + imageOffset.w}
                 y={paddingSize.h + imageOffset.h}
-                {...computeImageDimensions(realImageSize, imageFrameSize)}
+                {...computeImageDimensions(image.size, imageFrameSize)}
                 clipPath={"url(#image-mask)"}
                 style={{ cursor: "move" }}
             />

@@ -1,5 +1,5 @@
 import { ComponentProps, ReactNode, useState } from "react";
-import { Alert, FileInput } from "@mantine/core";
+import { Alert, FileInput, Loader } from "@mantine/core";
 import { blobToURI } from "@/app/helpers";
 import { useConfigStore } from "@/app/stores/config";
 
@@ -8,8 +8,10 @@ export const ImageUploader = ({
 }: {
     fileInputProps?: ComponentProps<typeof FileInput>;
 }): ReactNode => {
-    const { setImageUrl } = useConfigStore();
+    const { setImage } = useConfigStore();
     const [error, setError] = useState<string | null>(null);
+    const [uploading, setUploading] = useState<boolean>(false);
+
     const handleFileChange = async (payload: File | File[] | null) => {
         if (Array.isArray(payload)) {
             setError("Please select one image!");
@@ -17,9 +19,12 @@ export const ImageUploader = ({
         }
         if (payload) {
             setError(null);
-            setImageUrl((await blobToURI(payload)) || "");
+            setUploading(true);
+            await setImage((await blobToURI(payload)) || null);
+            setUploading(false);
         }
     };
+
     return (
         <>
             {error && (
@@ -28,9 +33,12 @@ export const ImageUploader = ({
                 </Alert>
             )}
             <FileInput
-                label={"Image"}
+                label={"Upload image"}
                 placeholder={"Pick an image..."}
                 onChange={handleFileChange}
+                disabled={uploading}
+                accept={"image/png,image/jpeg"}
+                leftSection={uploading ? <Loader size={"sm"} /> : undefined}
                 {...fileInputProps}
             />
         </>

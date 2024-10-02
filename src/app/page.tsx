@@ -23,7 +23,7 @@ const STEPS = 3;
 
 export default function Home() {
     const { printSize } = useCanvasStore();
-    const { imageUrl } = useConfigStore();
+    const { image } = useConfigStore();
     const [active, setActive] = useState(0);
     const nextStep = () =>
         setActive((current) => (current < STEPS - 1 ? current + 1 : current));
@@ -33,7 +33,7 @@ export default function Home() {
 
     useEffect(() => {
         if (active === 0) {
-            if (imageUrl === "") setNextButtonDisabled(true);
+            if (!image) setNextButtonDisabled(true);
             else setNextButtonDisabled(false);
         } else if (active === 1) {
             if (!printSize) setNextButtonDisabled(true);
@@ -41,7 +41,7 @@ export default function Home() {
         } else if (active === 2) {
             setNextButtonDisabled(true);
         }
-    }, [active, imageUrl, printSize]);
+    }, [active, image, printSize]);
 
     return (
         <Center mih={"100vh"} miw={"100%"}>
@@ -63,9 +63,9 @@ export default function Home() {
                                     <Text ta={"center"}>
                                         First, choose your image
                                     </Text>
-                                    {imageUrl && (
+                                    {image && (
                                         <Image
-                                            src={imageUrl}
+                                            src={image.url}
                                             alt={"Image preview"}
                                             fit={"contain"}
                                             mah={"30vh"}
