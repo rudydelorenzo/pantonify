@@ -5,7 +5,7 @@ import {
     UnitsType,
     ValueWithUnit,
 } from "@/app/types";
-import { MARGIN_SIZES, UNITS } from "@/app/constants";
+import { MARGIN_SIZES, SRC_URL_REGEX, UNITS } from "@/app/constants";
 
 export const blobToURI = async (
     blob: Blob | undefined,
@@ -119,4 +119,81 @@ export const generateAllMarginsFromCm = (marginsInCm: {
         };
     }
     return result as MarginPresetsType;
+};
+
+export const downloadURI = (uri: string, name: string) => {
+    const link = document.createElement("a");
+    link.download = name;
+    link.href = uri;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+export const substituteURLsWithURI = async (
+    cssString: string,
+): Promise<string> => {
+    const url = cssString.match(SRC_URL_REGEX)?.[1];
+    if (url) {
+        const blob = await (await fetch(url)).blob();
+        const uri = await blobToURI(blob);
+        if (uri) {
+            cssString = cssString.replace(url, uri);
+        }
+    }
+    return cssString;
+};
+
+export const getCSSFontRules = async (): Promise<string> => {
+    const rules: string[] = [];
+    for (const stylesheet of document.styleSheets) {
+        for (const rule of stylesheet.cssRules) {
+            if (rule.type === rule.FONT_FACE_RULE) {
+                const ruleText = rule.cssText;
+                // dedupe
+                let alreadyInList = false;
+                for (const item of rules) {
+                    if (ruleText === item) {
+                        alreadyInList = true;
+                        break;
+                    }
+                }
+                if (!alreadyInList) {
+                    rules.push(await substituteURLsWithURI(ruleText));
+                }
+            }
+        }
+    }
+    return rules.join("\n");
+};
+
+export const svgElementToString = async (svgElement: Node): Promise<string> => {
+    // first we serialize the document to a string
+    const serializer = new XMLSerializer();
+    const serializedString = serializer.serializeToString(svgElement);
+
+    // now we re-parse it into an XML document object. this allows us to inject font styles
+    const parser = new DOMParser();
+    const xmlDocument = parser.parseFromString(
+        serializedString,
+        "image/svg+xml",
+    );
+
+    /* We need to embed the fonts as data URIs in the SVG. Why? Glad you asked. When we load the SVG into an
+     * <img> element (so we can then draw it on the canvas) the browser is very strict about not letting that <img>
+     * element establish any outbound network connections. Thus, when the <img> element tries to load the font from
+     * the URL (as determined by the @font-face.src property present in the global document stylesheet),
+     * the browser will block that request. To get around this we must define the @font-face declaration in the SVG
+     * itself, and instead of having the URL of the font file in the 'src' field, we swap it to be a data URI
+     * representation of what that URL points to. Got it? Good. I'm going to bed now
+     */
+    const svgNS = "http://www.w3.org/2000/svg";
+    const defs = xmlDocument.createElementNS(svgNS, "defs");
+    const style = xmlDocument.createElementNS(svgNS, "style");
+    style.innerHTML = await getCSSFontRules();
+    defs.appendChild(style);
+    xmlDocument.documentElement.appendChild(defs);
+
+    // we re-serialize the edited svg, and return it
+    return serializer.serializeToString(xmlDocument);
 };
