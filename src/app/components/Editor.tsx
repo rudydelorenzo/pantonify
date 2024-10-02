@@ -6,10 +6,12 @@ import {
     Button,
     Center,
     Flex,
+    Group,
     Loader,
     Stack,
     TextInput,
     Title,
+    Text,
 } from "@mantine/core";
 import { ArtDisplay } from "@/app/components/ArtDisplay";
 import { MarginSelector } from "@/app/components/editor/MarginSelector";
@@ -99,7 +101,14 @@ export const Editor = (): ReactNode => {
                         {!exportInProgress ? (
                             "Export as PNG..."
                         ) : (
-                            <Loader type={"bars"} color={"white"} h={"50%"} />
+                            <Group align={"center"} gap={"lg"}>
+                                <Text c={"white"}>Exporting</Text>
+                                <Loader
+                                    type={"dots"}
+                                    color={"white"}
+                                    size={"sm"}
+                                />
+                            </Group>
                         )}
                     </Button>
                 </Stack>
