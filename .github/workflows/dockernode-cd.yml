@@ -1,0 +1,17 @@
+name: Docker + Node deploy
+
+on:
+  push:
+    branches: [ main ]
+
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Start docker compose
+        run: npm run docker-deploy
+      - name: Check if online (15 tries with backoff)
+        run: wget --retry-connrefused --tries=15 --spider localhost:3005

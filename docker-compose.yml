@@ -1,0 +1,9 @@
+services:
+  app:
+    environment:
+      - ENVIRONMENT=production
+    build: .
+    container_name: portfolio_app
+    ports:
+      - "3005:3000"
+    restart: always
