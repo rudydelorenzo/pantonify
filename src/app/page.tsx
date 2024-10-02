@@ -78,8 +78,8 @@ export default function Home() {
                             </Center>
                         </CustomStep>
                         <Stepper.Step
-                            label="Size"
-                            description="Select your print size"
+                            label="Dimensions"
+                            description="Select your print size and units"
                         >
                             <Center>
                                 <Stack w={"50%"}>
