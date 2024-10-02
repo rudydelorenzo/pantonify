@@ -1,11 +1,15 @@
 import { ReactNode } from "react";
-import { ORIENTATIONS, UNITS } from "@/app/constants";
-import { SegmentedControl } from "@mantine/core";
+import { ORIENTATIONS } from "@/app/constants";
 import { OrientationType } from "@/app/types";
+import { useCanvasStore } from "@/app/stores/canvas";
+import { SegmentedControlLabelled } from "@/app/components/SegmentedControlLabelled";
 
 export const OrientationSelector = (): ReactNode => {
+    const { orientation, setOrientation } = useCanvasStore();
+
     return (
-        <SegmentedControl
+        <SegmentedControlLabelled
+            label={"Orientation"}
             value={`${orientation}`}
             onChange={(val) => setOrientation(val as OrientationType)}
             data={[ORIENTATIONS.portrait, ORIENTATIONS.landscape]}

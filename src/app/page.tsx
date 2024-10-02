@@ -11,28 +11,37 @@ import {
     Image,
 } from "@mantine/core";
 import { Editor } from "@/app/components/Editor";
-import { ImageUploader } from "@/app/components/Editor/ImageUploader";
+import { ImageUploader } from "@/app/components/editor/ImageUploader";
 import { useConfigStore } from "@/app/stores/config";
+import { PrintSizeSelector } from "@/app/components/editor/PrintSizeSelector";
+import { useCanvasStore } from "@/app/stores/canvas";
+import { UnitSelector } from "@/app/components/editor/UnitSelector";
+import { OrientationSelector } from "@/app/components/editor/OrientationSelector";
+import { CustomStep } from "@/app/components/CustomStep";
 
-const STEPS = 4;
+const STEPS = 3;
 
 export default function Home() {
+    const { printSize } = useCanvasStore();
     const { imageUrl } = useConfigStore();
     const [active, setActive] = useState(0);
     const nextStep = () =>
-        setActive((current) => (current < 3 ? current + 1 : current));
+        setActive((current) => (current < STEPS - 1 ? current + 1 : current));
     const prevStep = () =>
         setActive((current) => (current > 0 ? current - 1 : current));
     const [nextButtonDisabled, setNextButtonDisabled] = useState<boolean>(true);
 
     useEffect(() => {
         if (active === 0) {
-            if (imageUrl !== "") setNextButtonDisabled(false);
-            else setNextButtonDisabled(true);
+            if (imageUrl === "") setNextButtonDisabled(true);
+            else setNextButtonDisabled(false);
         } else if (active === 1) {
+            if (!printSize) setNextButtonDisabled(true);
+            else setNextButtonDisabled(false);
         } else if (active === 2) {
+            setNextButtonDisabled(true);
         }
-    }, [active, imageUrl]);
+    }, [active, imageUrl, printSize]);
 
     return (
         <Center mih={"100vh"} miw={"100%"}>
@@ -44,13 +53,15 @@ export default function Home() {
                         miw={"80%"}
                         maw={"90%"}
                     >
-                        <Stepper.Step
+                        <CustomStep
                             label="Image"
                             description="Upload your image"
                         >
                             <Center>
                                 <Stack w={"50%"}>
-                                    <Text>First choose your image</Text>
+                                    <Text ta={"center"}>
+                                        First, choose your image
+                                    </Text>
                                     {imageUrl && (
                                         <Image
                                             src={imageUrl}
@@ -64,27 +75,31 @@ export default function Home() {
                                     />
                                 </Stack>
                             </Center>
-                        </Stepper.Step>
+                        </CustomStep>
                         <Stepper.Step
                             label="Size"
                             description="Select your print size"
                         >
                             <Center>
-                                Now select your print size (don't worry, you'll
-                                be able to change this later)
+                                <Stack w={"50%"}>
+                                    <Text ta={"center"}>
+                                        {"Next, select your settings (don't worry, " +
+                                            "you'll be able to change these later)"}
+                                    </Text>
+                                    <UnitSelector />
+                                    <OrientationSelector />
+                                    <PrintSizeSelector />
+                                </Stack>
                             </Center>
                         </Stepper.Step>
                         <Stepper.Step
                             label="Edit"
                             description="Fine tune your art"
                         >
-                            Step 3 content: Get full access
-                        </Stepper.Step>
-                        <Stepper.Completed>
                             <Center>
                                 <Editor />
                             </Center>
-                        </Stepper.Completed>
+                        </Stepper.Step>
                     </Stepper>
                 </Center>
 

@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { physicalSizeToString } from "@/app/helpers";
 import { Select } from "@mantine/core";
 import { useCanvasStore } from "@/app/stores/canvas";
@@ -36,10 +36,14 @@ const getSizeOptions = (
 };
 
 export const PrintSizeSelector = (): ReactNode => {
-    const { setPrintSize, printSize } = useCanvasStore();
+    const { setPrintSize, printSize, orientation, units } = useCanvasStore();
     const [sizeOptions, setSizeOptions] = useState<{
         [key in string]: PhysicalSize;
     }>(getSizeOptions(orientation, units));
+
+    useEffect(() => {
+        setSizeOptions(getSizeOptions(orientation, units));
+    }, [units, orientation]);
 
     const handlePrintSizeChange = (value: string | null) => {
         setPrintSize(value ? sizeOptions[value] : null);

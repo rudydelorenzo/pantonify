@@ -1,6 +1,12 @@
 import { ValueWithUnit } from "@/app/types";
 import { create } from "zustand/react";
-import { UNITS } from "@/app/constants";
+import {
+    DEFAULT_MARGIN_SIZE,
+    DEFAULT_UNIT,
+    MARGIN_PRESETS,
+    UNITS,
+} from "@/app/constants";
+import { useCanvasStore } from "@/app/stores/canvas";
 
 type ConfigStoreState = {
     imageUrl: string;
@@ -24,10 +30,7 @@ export const useConfigStore = create<ConfigStoreState & ConfigStoreAction>(
         topText: "",
         bottomText: "",
         dateText: "",
-        margin: {
-            value: 0,
-            units: UNITS.cm,
-        },
+        margin: MARGIN_PRESETS[DEFAULT_MARGIN_SIZE][DEFAULT_UNIT],
         setImageUrl: (url) => {
             set(() => ({
                 imageUrl: url,

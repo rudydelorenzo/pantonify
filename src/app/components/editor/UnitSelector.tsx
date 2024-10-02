@@ -1,10 +1,19 @@
 import { ReactNode } from "react";
 import { UNITS } from "@/app/constants";
-import { SegmentedControl } from "@mantine/core";
+import { useCanvasStore } from "@/app/stores/canvas";
+import { UnitsType } from "@/app/types";
+import { SegmentedControlLabelled } from "@/app/components/SegmentedControlLabelled";
 
 export const UnitSelector = (): ReactNode => {
+    const { units, setUnits } = useCanvasStore();
+
+    const handleUnitsChange = (value: string) => {
+        setUnits(value as UnitsType);
+    };
+
     return (
-        <SegmentedControl
+        <SegmentedControlLabelled
+            label={"Units"}
             value={`${units}`}
             onChange={handleUnitsChange}
             data={[

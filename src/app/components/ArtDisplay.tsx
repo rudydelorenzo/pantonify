@@ -8,7 +8,7 @@ import {
     MouseEvent,
     useRef,
 } from "react";
-import { Size, ValueWithUnit } from "@/app/types";
+import { Size } from "@/app/types";
 import {
     DEFAULT_MARGIN_SIZE,
     FONT_SIZE_MULTIPLIER,
@@ -19,6 +19,8 @@ import { SvgText } from "@/app/components/SvgText";
 import { useCanvasStore } from "@/app/stores/canvas";
 import { valueWithUnitsToPixels } from "@/app/helpers";
 import useDrag from "@/app/hooks/useDrag";
+import { Center, Text } from "@mantine/core";
+import { useConfigStore } from "@/app/stores/config";
 
 const getMaxAxis = <T extends Size>(s: T): keyof T => {
     let largest: keyof T = (Object.keys(s) as (keyof T)[])[0];
@@ -67,32 +69,22 @@ const computeMaximumOffsets = (imageSize: Size, imageFrameSize: Size): Size => {
 const MOVEMENT_SPEED_MULTIPLIER = 7;
 
 export const ArtDisplay = ({
-    imageURL,
-    topText,
-    bottomText,
-    dateText,
-    margin,
-    canvasSize,
     svgRef,
 }: {
-    imageURL?: string;
-    topText: string;
-    bottomText: string;
-    margin: ValueWithUnit;
-    canvasSize: Size;
-    dateText?: string;
     svgRef: RefObject<SVGSVGElement>;
 }): ReactNode => {
     const [paddingSize, setPaddingSize] = useState<Size>({ w: 0, h: 0 });
     const [realImageSize, setRealImageSize] = useState<Size>({ w: 0, h: 0 });
     const [imageOffset, setImageOffset] = useState<Size>({ w: 0, h: 0 });
-    const { ppi } = useCanvasStore();
+    const { pixelSize, ppi } = useCanvasStore();
+    const { imageUrl, topText, bottomText, dateText, margin } =
+        useConfigStore();
     const imageElementRef = useRef<SVGImageElement>(null);
 
     useEffect(() => {
         const imgElementTemporary = new Image();
-        if (imageURL) {
-            imgElementTemporary.src = imageURL;
+        if (imageUrl) {
+            imgElementTemporary.src = imageUrl;
         }
         imgElementTemporary.onload = () => {
             setRealImageSize({
@@ -101,7 +93,7 @@ export const ArtDisplay = ({
             });
         };
         setImageOffset({ h: 0, w: 0 });
-    }, [imageURL]);
+    }, [imageUrl]);
 
     useEffect(() => {
         console.log(margin);
@@ -110,33 +102,6 @@ export const ArtDisplay = ({
             h: valueWithUnitsToPixels(margin, ppi),
         });
     }, [margin, ppi]);
-
-    const minimumPadding = valueWithUnitsToPixels(
-        MARGIN_PRESETS[DEFAULT_MARGIN_SIZE][UNITS.cm],
-        ppi,
-    );
-
-    const largeFontSize = FONT_SIZE_MULTIPLIER * canvasSize.h;
-    const smallFontSize = largeFontSize / 2.5;
-
-    const textPadding = canvasSize[getMaxAxis(canvasSize)] * 0.02;
-
-    const imageFrameSize: Size = {
-        w: canvasSize.w - 2 * paddingSize.w,
-        h:
-            canvasSize.h -
-            paddingSize.h -
-            smallFontSize -
-            largeFontSize -
-            4 * textPadding,
-    };
-
-    const bottomOfImage = paddingSize.h + imageFrameSize.h;
-    const topTextPosition = bottomOfImage + textPadding + largeFontSize;
-    const bottomTextPosition = topTextPosition + textPadding + smallFontSize;
-
-    const leftTextXPosition = Math.max(minimumPadding, paddingSize.w);
-    const rightTextXPosition = Math.max(canvasSize.w - leftTextXPosition);
 
     const handleDrag = (e: MouseEvent) => {
         const maxOffsets = computeMaximumOffsets(realImageSize, imageFrameSize);
@@ -163,16 +128,55 @@ export const ArtDisplay = ({
         onDrag: handleDrag,
     });
 
+    const shouldRender = imageUrl && imageUrl !== "" && pixelSize;
+
+    if (!shouldRender) {
+        return (
+            <Center h={"100%"}>
+                <Text>{"Select an image and print size to get started!"}</Text>
+            </Center>
+        );
+    }
+
+    const minimumTextPadding = valueWithUnitsToPixels(
+        MARGIN_PRESETS[DEFAULT_MARGIN_SIZE][UNITS.cm],
+        ppi,
+    );
+
+    const largeFontSize =
+        FONT_SIZE_MULTIPLIER * pixelSize[getMaxAxis(pixelSize)];
+    const smallFontSize = largeFontSize / 2.5;
+
+    const textPadding = pixelSize[getMaxAxis(pixelSize)] * 0.02;
+
+    const imageFrameSize: Size = {
+        w: pixelSize.w - 2 * paddingSize.w,
+        h:
+            pixelSize.h -
+            paddingSize.h -
+            smallFontSize -
+            largeFontSize -
+            4 * textPadding,
+    };
+
+    const bottomOfImage = paddingSize.h + imageFrameSize.h;
+    const topTextPosition = bottomOfImage + textPadding + largeFontSize;
+    const bottomTextPosition = topTextPosition + textPadding + smallFontSize;
+
+    const leftTextXPosition = Math.max(minimumTextPadding, paddingSize.w);
+    const rightTextXPosition = Math.max(pixelSize.w - leftTextXPosition);
+
     return (
         <svg
             ref={svgRef}
-            viewBox={`0 0 ${canvasSize.w} ${canvasSize.h}`}
+            viewBox={`0 0 ${pixelSize.w} ${pixelSize.h}`}
             xmlns="http://www.w3.org/2000/svg"
             style={{
                 background: "white",
-                maxHeight: "90vh",
-                minHeight: getMaxAxis(canvasSize) === "h" ? "90vh" : undefined,
-                minWidth: getMaxAxis(canvasSize) === "w" ? "50vw" : undefined,
+                maxHeight: "70vh",
+                maxWidth: "50vw",
+                minHeight: getMaxAxis(pixelSize) === "h" ? "70vh" : undefined,
+                minWidth: getMaxAxis(pixelSize) === "w" ? "50vw" : undefined,
             }}
         >
             <defs>
@@ -186,7 +190,7 @@ export const ArtDisplay = ({
                 </clipPath>
             </defs>
             <image
-                href={imageURL}
+                href={imageUrl}
                 ref={imageElementRef}
                 x={paddingSize.w + imageOffset.w}
                 y={paddingSize.h + imageOffset.h}

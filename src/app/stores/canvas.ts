@@ -1,7 +1,15 @@
 import { OrientationType, PhysicalSize, Size, UnitsType } from "@/app/types";
 import { create } from "zustand/react";
-import { DEFAULT_PPI, ORIENTATIONS, UNITS } from "@/app/constants";
+import {
+    DEFAULT_MARGIN_SIZE,
+    DEFAULT_PPI,
+    DEFAULT_UNIT,
+    MARGIN_PRESETS,
+    ORIENTATIONS,
+    UNITS,
+} from "@/app/constants";
 import { getPixelSizeFromPPI } from "@/app/helpers";
+import { useConfigStore } from "@/app/stores/config";
 
 type CanvasStoreState = {
     pixelSize: Size | null;
@@ -23,7 +31,7 @@ export const useCanvasStore = create<CanvasStoreState & CanvasStoreAction>(
         pixelSize: null,
         printSize: null,
         ppi: DEFAULT_PPI,
-        units: UNITS.cm,
+        units: DEFAULT_UNIT,
         orientation: ORIENTATIONS.portrait,
         setPrintSize: (size) => {
             set((state) => ({
@@ -40,14 +48,25 @@ export const useCanvasStore = create<CanvasStoreState & CanvasStoreAction>(
             }));
         },
         setOrientation: (orientation: OrientationType) => {
-            set((state) => ({
-                orientation,
-            }));
+            set((state) => {
+                state.setPrintSize(null);
+                return {
+                    orientation,
+                };
+            });
         },
         setUnits: (units: UnitsType) => {
-            set((state) => ({
-                units,
-            }));
+            set((state) => {
+                useConfigStore
+                    .getState()
+                    .setMargin(
+                        MARGIN_PRESETS[DEFAULT_MARGIN_SIZE][state.units],
+                    );
+                state.setPrintSize(null);
+                return {
+                    units,
+                };
+            });
         },
     }),
 );
