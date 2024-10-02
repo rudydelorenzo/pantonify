@@ -52,6 +52,7 @@ export default function Home() {
                         onStepClick={setActive}
                         miw={"80%"}
                         maw={"90%"}
+                        allowNextStepsSelect={false}
                     >
                         <CustomStep
                             label="Image"

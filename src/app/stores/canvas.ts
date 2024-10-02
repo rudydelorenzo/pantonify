@@ -6,7 +6,6 @@ import {
     DEFAULT_UNIT,
     MARGIN_PRESETS,
     ORIENTATIONS,
-    UNITS,
 } from "@/app/constants";
 import { getPixelSizeFromPPI } from "@/app/helpers";
 import { useConfigStore } from "@/app/stores/config";

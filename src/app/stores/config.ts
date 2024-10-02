@@ -4,9 +4,7 @@ import {
     DEFAULT_MARGIN_SIZE,
     DEFAULT_UNIT,
     MARGIN_PRESETS,
-    UNITS,
 } from "@/app/constants";
-import { useCanvasStore } from "@/app/stores/canvas";
 
 type ConfigStoreState = {
     imageUrl: string;

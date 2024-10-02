@@ -1,5 +1,4 @@
-import { ChangeEvent, ReactNode, useRef } from "react";
-import { useCanvasStore } from "@/app/stores/canvas";
+import { ChangeEvent, ReactNode, useRef, useState } from "react";
 import { useConfigStore } from "@/app/stores/config";
 import { exportAndSaveImage } from "@/app/helpers";
 import {
@@ -7,8 +6,8 @@ import {
     Button,
     Center,
     Flex,
+    Loader,
     Stack,
-    Text,
     TextInput,
     Title,
 } from "@mantine/core";
@@ -27,6 +26,7 @@ export const Editor = (): ReactNode => {
         setBottomText,
         setDateText,
     } = useConfigStore();
+    const [exportInProgress, setExportInProgress] = useState<boolean>(false);
 
     const svgCanvasElement = useRef<SVGSVGElement | null>(null);
 
@@ -41,10 +41,12 @@ export const Editor = (): ReactNode => {
     };
 
     const handleRenderImage = async () => {
+        setExportInProgress(true);
         await exportAndSaveImage(
             `EXPORT_${topText}_${bottomText}.png`,
             svgCanvasElement,
         );
+        setExportInProgress(false);
     };
 
     return (
@@ -90,8 +92,15 @@ export const Editor = (): ReactNode => {
                             </Accordion.Panel>
                         </Accordion.Item>
                     </Accordion>
-                    <Button onClick={handleRenderImage}>
-                        Export as PNG...
+                    <Button
+                        onClick={handleRenderImage}
+                        disabled={exportInProgress}
+                    >
+                        {!exportInProgress ? (
+                            "Export as PNG..."
+                        ) : (
+                            <Loader type={"bars"} color={"white"} h={"50%"} />
+                        )}
                     </Button>
                 </Stack>
             </Center>

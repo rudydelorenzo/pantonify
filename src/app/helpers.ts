@@ -202,30 +202,33 @@ export const svgElementToString = async (svgElement: Node): Promise<string> => {
 export const exportAndSaveImage = async (
     filename: string,
     svgCanvasElement: MutableRefObject<SVGSVGElement | null>,
-) => {
-    const canvas = document.createElement("canvas");
-    const w = svgCanvasElement.current?.viewBox.baseVal.width || 0;
-    const h = svgCanvasElement.current?.viewBox.baseVal.height || 0;
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
+): Promise<void> => {
+    return new Promise(async (resolve) => {
+        const canvas = document.createElement("canvas");
+        const w = svgCanvasElement.current?.viewBox.baseVal.width || 0;
+        const h = svgCanvasElement.current?.viewBox.baseVal.height || 0;
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
 
-    if (ctx && svgCanvasElement.current) {
-        const svg = new Blob(
-            [await svgElementToString(svgCanvasElement.current)],
-            {
-                type: "image/svg+xml",
-            },
-        );
-        const url = URL.createObjectURL(svg);
+        if (ctx && svgCanvasElement.current) {
+            const svg = new Blob(
+                [await svgElementToString(svgCanvasElement.current)],
+                {
+                    type: "image/svg+xml",
+                },
+            );
+            const url = URL.createObjectURL(svg);
 
-        const img = new Image();
-        img.onload = function () {
-            ctx.drawImage(img, 0, 0, w, h);
-            URL.revokeObjectURL(url);
-            const png_img = canvas.toDataURL("image/png");
-            downloadURI(png_img, filename);
-        };
-        img.src = url;
-    }
+            const img = new Image();
+            img.onload = function () {
+                ctx.drawImage(img, 0, 0, w, h);
+                URL.revokeObjectURL(url);
+                const png_img = canvas.toDataURL("image/png");
+                resolve();
+                downloadURI(png_img, filename);
+            };
+            img.src = url;
+        }
+    });
 };
