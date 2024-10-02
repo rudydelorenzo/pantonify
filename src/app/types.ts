@@ -8,6 +8,11 @@ export type Size = {
     h: number;
 };
 
+export type ImageType = {
+    url: string;
+    size: Size;
+};
+
 export type ValueWithUnit = {
     value: number;
     units: UnitsType;

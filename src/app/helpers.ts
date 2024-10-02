@@ -5,7 +5,13 @@ import {
     UnitsType,
     ValueWithUnit,
 } from "@/app/types";
-import { MARGIN_SIZES, UNITS } from "@/app/constants";
+import {
+    FONT_SIZE_MULTIPLIER,
+    MARGIN_SIZES,
+    SRC_URL_REGEX,
+    UNITS,
+} from "@/app/constants";
+import { MutableRefObject } from "react";
 
 export const blobToURI = async (
     blob: Blob | undefined,
@@ -119,4 +125,211 @@ export const generateAllMarginsFromCm = (marginsInCm: {
         };
     }
     return result as MarginPresetsType;
+};
+
+export const downloadURI = (uri: string, name: string) => {
+    const link = document.createElement("a");
+    link.download = name;
+    link.href = uri;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+export const substituteURLsWithURI = async (
+    cssString: string,
+): Promise<string> => {
+    const url = cssString.match(SRC_URL_REGEX)?.[1];
+    if (url) {
+        const blob = await (await fetch(url)).blob();
+        const uri = await blobToURI(blob);
+        if (uri) {
+            cssString = cssString.replace(url, uri);
+        }
+    }
+    return cssString;
+};
+
+export const getCSSFontRules = async (): Promise<string> => {
+    const rules: string[] = [];
+    for (const stylesheet of document.styleSheets) {
+        for (const rule of stylesheet.cssRules) {
+            if (rule.type === rule.FONT_FACE_RULE) {
+                const ruleText = rule.cssText;
+                // dedupe
+                let alreadyInList = false;
+                for (const item of rules) {
+                    if (ruleText === item) {
+                        alreadyInList = true;
+                        break;
+                    }
+                }
+                if (!alreadyInList) {
+                    rules.push(await substituteURLsWithURI(ruleText));
+                }
+            }
+        }
+    }
+    return rules.join("\n");
+};
+
+export const svgElementToString = async (svgElement: Node): Promise<string> => {
+    // first we serialize the document to a string
+    const serializer = new XMLSerializer();
+    const serializedString = serializer.serializeToString(svgElement);
+
+    // now we re-parse it into an XML document object. this allows us to inject font styles
+    const parser = new DOMParser();
+    const xmlDocument = parser.parseFromString(
+        serializedString,
+        "image/svg+xml",
+    );
+
+    /* We need to embed the fonts as data URIs in the SVG. Why? Glad you asked. When we load the SVG into an
+     * <img> element (so we can then draw it on the canvas) the browser is very strict about not letting that <img>
+     * element establish any outbound network connections. Thus, when the <img> element tries to load the font from
+     * the URL (as determined by the @font-face.src property present in the global document stylesheet),
+     * the browser will block that request. To get around this we must define the @font-face declaration in the SVG
+     * itself, and instead of having the URL of the font file in the 'src' field, we swap it to be a data URI
+     * representation of what that URL points to. Got it? Good. I'm going to bed now
+     */
+    const svgNS = "http://www.w3.org/2000/svg";
+    const defs = xmlDocument.createElementNS(svgNS, "defs");
+    const style = xmlDocument.createElementNS(svgNS, "style");
+    style.innerHTML = await getCSSFontRules();
+    defs.appendChild(style);
+    xmlDocument.documentElement.appendChild(defs);
+
+    // we re-serialize the edited svg, and return it
+    return serializer.serializeToString(xmlDocument);
+};
+
+export const exportAndSaveImage = async (
+    filename: string,
+    svgCanvasElement: MutableRefObject<SVGSVGElement | null>,
+): Promise<void> => {
+    return new Promise(async (resolve) => {
+        const canvas = document.createElement("canvas");
+        const w = svgCanvasElement.current?.viewBox.baseVal.width || 0;
+        const h = svgCanvasElement.current?.viewBox.baseVal.height || 0;
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+
+        if (ctx && svgCanvasElement.current) {
+            const svg = new Blob(
+                [await svgElementToString(svgCanvasElement.current)],
+                {
+                    type: "image/svg+xml",
+                },
+            );
+            const url = URL.createObjectURL(svg);
+
+            const img = new Image();
+            img.onload = function () {
+                ctx.drawImage(img, 0, 0, w, h);
+                URL.revokeObjectURL(url);
+                const png_img = canvas.toDataURL("image/png");
+                resolve();
+                downloadURI(png_img, filename);
+            };
+            img.src = url;
+        }
+    });
+};
+
+export const getRealImageSize = async (
+    imageUrl: string | null,
+): Promise<Size> => {
+    return new Promise((resolve) => {
+        const imgElementTemporary = new Image();
+        if (imageUrl) {
+            imgElementTemporary.src = imageUrl;
+        } else {
+            return null;
+        }
+        imgElementTemporary.onload = () => {
+            resolve({
+                w: imgElementTemporary.width,
+                h: imgElementTemporary.height,
+            });
+        };
+    });
+};
+
+export const getMaxAxis = <T extends Size>(s: T): keyof T => {
+    let largest: keyof T = (Object.keys(s) as (keyof T)[])[0];
+    for (const axis in s) {
+        if (s[largest] < s[axis]) {
+            largest = axis;
+        }
+    }
+    return largest;
+};
+
+export const getTextPadding = (pixelSize: Size): number =>
+    pixelSize[getMaxAxis(pixelSize)] * 0.02;
+
+export const getFontSizes = (
+    pixelSize: Size,
+): { largeFontSize: number; smallFontSize: number } => {
+    const largeFontSize =
+        FONT_SIZE_MULTIPLIER * pixelSize[getMaxAxis(pixelSize)];
+    const smallFontSize = largeFontSize / 2.5;
+
+    return {
+        largeFontSize,
+        smallFontSize,
+    };
+};
+
+export const getImageFrameSize = (pixelSize: Size, marginSize: Size): Size => {
+    const { largeFontSize, smallFontSize } = getFontSizes(pixelSize);
+
+    return {
+        w: pixelSize.w - 2 * marginSize.w,
+        h:
+            pixelSize.h -
+            marginSize.h -
+            smallFontSize -
+            largeFontSize -
+            4 * getTextPadding(pixelSize),
+    };
+};
+
+export const computeImageDimensions = (
+    imageSize: Size,
+    imageFrameSize: Size,
+): { width: number; height: number } => {
+    // Calculate the aspect ratios
+    const imageAspectRatio = imageSize.w / imageSize.h;
+    const containerAspectRatio = imageFrameSize.w / imageFrameSize.h;
+
+    let finalWidth, finalHeight;
+    // Compare aspect ratios to determine whether to scale based on width or height
+    if (imageAspectRatio > containerAspectRatio) {
+        // Image is wider than container, scale based on height
+        finalHeight = imageFrameSize.h;
+        finalWidth = imageFrameSize.h * imageAspectRatio;
+    } else {
+        // Image is taller than container, scale based on width
+        finalWidth = imageFrameSize.w;
+        finalHeight = imageFrameSize.w / imageAspectRatio;
+    }
+    return { width: finalWidth, height: finalHeight };
+};
+
+export const computeMaximumOffsets = (
+    imageSize: Size,
+    imageFrameSize: Size,
+): Size => {
+    const finalImageDimensions = computeImageDimensions(
+        imageSize,
+        imageFrameSize,
+    );
+
+    return {
+        w: -(finalImageDimensions.width - imageFrameSize.w),
+        h: -(finalImageDimensions.height - imageFrameSize.h),
+    };
 };

@@ -15,6 +15,8 @@ export const UNITS = {
 
 export const DEFAULT_MARGIN_SIZE = "md";
 
+export const DEFAULT_UNIT = UNITS.cm;
+
 export const MARGIN_SIZES = ["none", "sm", "md", "lg", "xl"] as const;
 
 const _MARGINS_IN_CM: {
