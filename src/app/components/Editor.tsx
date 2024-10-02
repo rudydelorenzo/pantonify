@@ -19,13 +19,10 @@ import { OrientationSelector } from "@/app/components/editor/OrientationSelector
 import { PrintSizeSelector } from "@/app/components/editor/PrintSizeSelector";
 
 export const Editor = (): ReactNode => {
-    const { pixelSize } = useCanvasStore(); // should look to remove this dep
     const {
-        imageUrl, // should look to remove dependency on imageURL
         topText,
         bottomText,
         dateText,
-        margin,
         setTopText,
         setBottomText,
         setDateText,
