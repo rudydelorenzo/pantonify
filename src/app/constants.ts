@@ -1,8 +1,6 @@
 // percentage
-import { MarginPresetsType, PhysicalSize, UnitsType } from "@/app/types";
+import { MarginPresetsType } from "@/app/types";
 import { generateAllMarginsFromCm } from "@/app/helpers";
-
-export const DEFAULT_PADDING_PERCENT = 0.06;
 
 export const FONT_SIZE_MULTIPLIER = 0.05;
 
@@ -15,16 +13,18 @@ export const UNITS = {
     in: "in",
 } as const;
 
+export const DEFAULT_MARGIN_SIZE = "md";
+
 export const MARGIN_SIZES = ["none", "sm", "md", "lg", "xl"] as const;
 
 const _MARGINS_IN_CM: {
     [key in (typeof MARGIN_SIZES)[number]]: number;
 } = {
     none: 0,
-    sm: 0.25,
-    md: 1,
-    lg: 2,
-    xl: 3,
+    sm: 1.5,
+    md: 3,
+    lg: 4,
+    xl: 5,
 };
 
 export const MARGIN_PRESETS: MarginPresetsType =

@@ -59,10 +59,10 @@ export const getPixelSizeFromPPI = (
     physicalSize = { ...physicalSize };
     let key: keyof PhysicalSize;
     for (key in physicalSize) {
-        if (physicalSize[key].units === UNITS.in) {
+        if (physicalSize[key].units === UNITS.cm) {
             physicalSize[key] = {
-                value: inchesToCm(physicalSize[key].value),
-                units: UNITS.cm,
+                value: cmToInches(physicalSize[key].value),
+                units: UNITS.in,
             };
         }
     }

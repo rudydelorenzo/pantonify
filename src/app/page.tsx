@@ -12,9 +12,10 @@ import {
     Text,
     SegmentedControl,
     Select,
+    NumberInput,
 } from "@mantine/core";
 import {
-    DEFAULT_PADDING_PERCENT,
+    DEFAULT_MARGIN_SIZE,
     MARGIN_PRESETS,
     ORIENTATIONS,
     PRINT_SIZES,
@@ -28,7 +29,6 @@ import {
     OrientationType,
     PhysicalSize,
     UnitsType,
-    ValueWithUnit,
 } from "@/app/types";
 import { useCanvasStore } from "@/app/stores/canvas";
 
@@ -140,15 +140,21 @@ const getSizeOptions = (
 const getMarginOptions = (
     presets: MarginPresetsType,
     units: UnitsType,
-): Record<string, MarginPresetsType[keyof MarginPresetsType][UnitsType]> => {
+): Record<
+    string,
+    MarginPresetsType[keyof MarginPresetsType][UnitsType] | undefined
+> => {
     const result: Record<
         string,
-        MarginPresetsType[keyof MarginPresetsType][UnitsType]
+        MarginPresetsType[keyof MarginPresetsType][UnitsType] | undefined
     > = {};
     let size: keyof typeof presets;
     for (size in presets) {
         result[size] = presets[size][units];
     }
+
+    // add custom option
+    result["Custom"] = undefined;
 
     return result;
 };
@@ -166,9 +172,10 @@ export default function Home() {
     const [marginOptions, setMarginOptions] = useState(
         getMarginOptions(MARGIN_PRESETS, units),
     );
-    const [marginSizeLocalState, setMarginSizeLocalState] = useState<
-        keyof typeof marginOptions
-    >(Object.keys(marginOptions)[1]);
+    const [marginSizeLocalState, setMarginSizeLocalState] =
+        useState<keyof typeof marginOptions>(DEFAULT_MARGIN_SIZE);
+    const [customMarginSizeLocalState, setCustomMarginSizeLocalState] =
+        useState<number>(0);
 
     const svgCanvasElement = useRef<SVGSVGElement | null>(null);
 
@@ -177,6 +184,19 @@ export default function Home() {
         setMarginOptions(getMarginOptions(MARGIN_PRESETS, units));
         setPrintSize(null);
     }, [units, orientation]);
+
+    // this useEffect handles synchronization between local state and global state
+    useEffect(() => {
+        const marginValue = marginOptions[marginSizeLocalState];
+        if (marginValue) {
+            configStore.setMargin(marginValue);
+        } else {
+            configStore.setMargin({
+                value: customMarginSizeLocalState,
+                units: units,
+            });
+        }
+    }, [marginSizeLocalState, customMarginSizeLocalState, units]);
 
     const handleUnitsChange = (value: string) => {
         setUnits(value as UnitsType);
@@ -196,10 +216,13 @@ export default function Home() {
         configStore.setDateText(event.target.value);
     };
     const handleMarginChange = (value: string) => {
-        const marginValue = marginOptions[value];
         setMarginSizeLocalState(value);
-        if (marginValue) {
-            configStore.setMargin(marginValue);
+    };
+    const handleCustomMarginChange = (value: number | string) => {
+        if (typeof value === "number") {
+            setCustomMarginSizeLocalState(value);
+        } else {
+            console.warn("received string type for custom margin size");
         }
     };
     const handlePrintSizeChange = (value: string | null) => {
@@ -229,7 +252,7 @@ export default function Home() {
                 const png_img = canvas.toDataURL("image/png");
                 downloadURI(
                     png_img,
-                    `EXPORT_${configStore.topText}_${configStore.topText}.png`,
+                    `EXPORT_${configStore.topText}_${configStore.bottomText}.png`,
                 );
             };
             img.src = url;
@@ -248,7 +271,7 @@ export default function Home() {
                                 bottomText={configStore.bottomText}
                                 dateText={configStore.dateText}
                                 margin={configStore.margin}
-                                imageSize={pixelSize}
+                                canvasSize={pixelSize}
                                 svgRef={svgCanvasElement}
                             />
                         ) : (
@@ -322,6 +345,14 @@ export default function Home() {
                             transitionDuration={250}
                             transitionTimingFunction={"ease"}
                         />
+                        {marginSizeLocalState === "Custom" && (
+                            <NumberInput
+                                label={`Custom margin size (${units})`}
+                                value={customMarginSizeLocalState}
+                                onChange={handleCustomMarginChange}
+                                suffix={` ${units}`}
+                            />
+                        )}
                         <Button onClick={handleRenderImage}>
                             Export as PNG...
                         </Button>
