@@ -42,17 +42,16 @@ const useDrag = (
     useEffect(() => {
         const element = ref?.current;
         if (element) {
-            element.addEventListener(
-                "mousedown",
-                handlePointerDown as EventListener,
-            );
+            element.addEventListener("mousedown", handlePointerDown);
             element.addEventListener("mouseup", handlePointerUp);
             element.addEventListener("mousemove", handlePointerMove);
+            element.addEventListener("mouseout", handlePointerUp);
 
             return () => {
                 element.removeEventListener("mousedown", handlePointerDown);
                 element.removeEventListener("mouseup", handlePointerUp);
                 element.removeEventListener("mousemove", handlePointerMove);
+                element.removeEventListener("mouseout", handlePointerUp);
             };
         }
 

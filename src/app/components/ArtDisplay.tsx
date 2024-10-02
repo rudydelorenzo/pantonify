@@ -192,6 +192,7 @@ export const ArtDisplay = ({
                 y={paddingSize.h + imageOffset.h}
                 {...computeImageDimensions(realImageSize, imageFrameSize)}
                 clipPath={"url(#image-mask)"}
+                style={{ cursor: "move" }}
             />
             <SvgText
                 id={"topText"}
