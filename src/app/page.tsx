@@ -13,6 +13,7 @@ import {
     SegmentedControl,
     Select,
     NumberInput,
+    Title,
 } from "@mantine/core";
 import {
     DEFAULT_MARGIN_SIZE,
@@ -281,6 +282,9 @@ export default function Home() {
                 </div>
                 <Center>
                     <Stack>
+                        <Center>
+                            <Title>🌄 Pantonify</Title>
+                        </Center>
                         <SegmentedControl
                             value={`${units}`}
                             onChange={handleUnitsChange}

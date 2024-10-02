@@ -5,7 +5,7 @@ import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 import { helveticaNeue } from "@/app/fonts";
 
 export const metadata: Metadata = {
-    title: "Pantonify",
+    title: "🌄 Pantonify",
     description: "A tool to put your art into a pantone color chip",
 };
 
