@@ -59,12 +59,12 @@ export const useConfigStore = create<ConfigStoreState & ConfigStoreAction>(
         },
         offsets: { w: 0, h: 0 },
         setImage: async (url) => {
+            if (!url) {
+                set(() => ({ image: null }));
+                return;
+            }
             const imageSize = await getRealImageSize(url);
-            set(() => {
-                // setImageOffset({ h: 0, w: 0 });
-                if (!url) return { image: null };
-                return { image: { url: url, size: imageSize } };
-            });
+            set(() => ({ image: { url: url, size: imageSize } }));
         },
         setTopText: (text) => {
             set(() => ({

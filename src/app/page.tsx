@@ -22,8 +22,8 @@ import { CustomStep } from "@/app/components/CustomStep";
 const STEPS = 3;
 
 export default function Home() {
-    const { printSize } = useCanvasStore();
-    const { image } = useConfigStore();
+    const printSize = useCanvasStore((state) => state.printSize);
+    const image = useConfigStore((state) => state.image);
     const [active, setActive] = useState(0);
     const nextStep = () =>
         setActive((current) => (current < STEPS - 1 ? current + 1 : current));

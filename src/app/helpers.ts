@@ -238,16 +238,10 @@ export const exportAndSaveImage = async (
     });
 };
 
-export const getRealImageSize = async (
-    imageUrl: string | null,
-): Promise<Size> => {
+export const getRealImageSize = async (imageUrl: string): Promise<Size> => {
     return new Promise((resolve) => {
         const imgElementTemporary = new Image();
-        if (imageUrl) {
-            imgElementTemporary.src = imageUrl;
-        } else {
-            return null;
-        }
+        imgElementTemporary.src = imageUrl;
         imgElementTemporary.onload = () => {
             resolve({
                 w: imgElementTemporary.width,
