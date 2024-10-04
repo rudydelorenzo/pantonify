@@ -3,7 +3,7 @@
 import { ReactNode, RefObject, MouseEvent, useRef } from "react";
 import { Size } from "@/app/types";
 import { DEFAULT_MARGIN_SIZE, MARGIN_PRESETS, UNITS } from "@/app/constants";
-import { SvgText } from "@/app/components/SvgText";
+import { SvgText } from "@/app/components/wrappers/SvgText";
 import { useCanvasStore } from "@/app/stores/canvas";
 import {
     computeImageDimensions,

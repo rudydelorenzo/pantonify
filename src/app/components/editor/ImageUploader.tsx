@@ -8,7 +8,7 @@ export const ImageUploader = ({
 }: {
     fileInputProps?: ComponentProps<typeof FileInput>;
 }): ReactNode => {
-    const { setImage } = useConfigStore();
+    const setImage = useConfigStore((state) => state.setImage);
     const [error, setError] = useState<string | null>(null);
     const [uploading, setUploading] = useState<boolean>(false);
 

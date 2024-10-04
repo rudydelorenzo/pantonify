@@ -2,10 +2,11 @@ import { ReactNode, useEffect, useState } from "react";
 import { DEFAULT_MARGIN_SIZE, MARGIN_PRESETS } from "@/app/constants";
 import { useCanvasStore } from "@/app/stores/canvas";
 import { MarginPresetsType, UnitsType, ValueWithUnit } from "@/app/types";
-import { SegmentedControlLabelled } from "@/app/components/SegmentedControlLabelled";
+import { SegmentedControlLabelled } from "@/app/components/wrappers/SegmentedControlLabelled";
 import { useConfigStore } from "@/app/stores/config";
 import { Button, Group, NumberInput, Stack } from "@mantine/core";
 import { isEqual } from "lodash";
+import { useShallow } from "zustand/react/shallow";
 
 const CUSTOM_VALUE_LABEL = "Custom" as const;
 const DEFAULT_CUSTOM_MARGIN = 0;
@@ -48,8 +49,19 @@ const getMarginValue = (
 };
 
 export const MarginSelector = (): ReactNode => {
-    const { units, orientation, ppi } = useCanvasStore();
-    const { setMargin, margin } = useConfigStore();
+    const { units, orientation, ppi } = useCanvasStore(
+        useShallow((state) => ({
+            units: state.units,
+            orientation: state.orientation,
+            ppi: state.ppi,
+        })),
+    );
+    const { setMargin, margin } = useConfigStore(
+        useShallow((state) => ({
+            margin: state.margin,
+            setMargin: state.setMargin,
+        })),
+    );
     const [showCustomBox, setShowCustomBox] = useState(false);
     const [customBoxInput, setCustomBoxInput] = useState<number>(
         DEFAULT_CUSTOM_MARGIN,

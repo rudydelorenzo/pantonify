@@ -4,6 +4,7 @@ import { Select } from "@mantine/core";
 import { useCanvasStore } from "@/app/stores/canvas";
 import { OrientationType, PhysicalSize, UnitsType } from "@/app/types";
 import { ORIENTATIONS, PRINT_SIZES } from "@/app/constants";
+import { useShallow } from "zustand/react/shallow";
 
 const getSizeOptions = (
     orientation: OrientationType,
@@ -36,7 +37,14 @@ const getSizeOptions = (
 };
 
 export const PrintSizeSelector = (): ReactNode => {
-    const { setPrintSize, printSize, orientation, units } = useCanvasStore();
+    const { setPrintSize, printSize, orientation, units } = useCanvasStore(
+        useShallow((state) => ({
+            setPrintSize: state.setPrintSize,
+            printSize: state.printSize,
+            orientation: state.orientation,
+            units: state.units,
+        })),
+    );
     const [sizeOptions, setSizeOptions] = useState<{
         [key in string]: PhysicalSize;
     }>(getSizeOptions(orientation, units));

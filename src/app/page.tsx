@@ -17,7 +17,7 @@ import { PrintSizeSelector } from "@/app/components/editor/PrintSizeSelector";
 import { useCanvasStore } from "@/app/stores/canvas";
 import { UnitSelector } from "@/app/components/editor/UnitSelector";
 import { OrientationSelector } from "@/app/components/editor/OrientationSelector";
-import { CustomStep } from "@/app/components/CustomStep";
+import { CustomStep } from "@/app/components/wrappers/CustomStep";
 
 const STEPS = 3;
 
