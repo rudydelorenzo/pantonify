@@ -36,15 +36,12 @@ const getMarginValue = (
     marginOptions: MarginOptionsType,
 ): string => {
     let value: null | string = null;
-    console.log("start loop");
     for (const k in marginOptions) {
         const v = marginOptions[k];
         if (isEqual(v, margin)) {
             value = k;
-            console.log("found equal");
         }
     }
-    console.log("end loop");
     if (!value) value = CUSTOM_VALUE_LABEL;
 
     return value;
