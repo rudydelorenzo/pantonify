@@ -56,6 +56,8 @@ const useDrag = (
         }
 
         return () => {};
+        // spreading these is necessary for the hook to work, thus we silence the warning
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [...deps, isDragging]);
 
     return { isDragging };

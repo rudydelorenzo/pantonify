@@ -27,3 +27,7 @@ export type MarginPresetsType = {
         [key in UnitsType]: ValueWithUnit;
     };
 };
+
+export type PropertiesOfObjectWithType<T, TV> = {
+    [key in keyof T]: T[key] extends TV ? key : never;
+}[keyof T];

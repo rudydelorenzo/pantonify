@@ -1,55 +1,16 @@
-import { ChangeEvent, ReactNode, useRef, useState } from "react";
-import { useConfigStore } from "@/app/stores/config";
-import { exportAndSaveImage } from "@/app/helpers";
-import {
-    Accordion,
-    Button,
-    Center,
-    Flex,
-    Group,
-    Loader,
-    Stack,
-    TextInput,
-    Title,
-    Text,
-} from "@mantine/core";
+import { ReactNode, useRef } from "react";
+import { Accordion, Center, Flex, Stack, Title } from "@mantine/core";
 import { ArtDisplay } from "@/app/components/ArtDisplay";
 import { MarginSelector } from "@/app/components/editor/MarginSelector";
 import { UnitSelector } from "@/app/components/editor/UnitSelector";
 import { OrientationSelector } from "@/app/components/editor/OrientationSelector";
 import { PrintSizeSelector } from "@/app/components/editor/PrintSizeSelector";
+import { EstimatedFilesizeDisplay } from "@/app/components/editor/EstimatedFilesizeDisplay";
+import { ExportButton } from "@/app/components/editor/ExportButton";
+import { ConfigTextInput } from "@/app/components/editor/ConfigTextInput";
 
 export const Editor = (): ReactNode => {
-    const {
-        topText,
-        bottomText,
-        dateText,
-        setTopText,
-        setBottomText,
-        setDateText,
-    } = useConfigStore();
-    const [exportInProgress, setExportInProgress] = useState<boolean>(false);
-
     const svgCanvasElement = useRef<SVGSVGElement | null>(null);
-
-    const handleTopTextChange = (event: ChangeEvent<HTMLInputElement>) => {
-        setTopText(event.target.value);
-    };
-    const handleBottomTextChange = (event: ChangeEvent<HTMLInputElement>) => {
-        setBottomText(event.target.value);
-    };
-    const handleDateTextChange = (event: ChangeEvent<HTMLInputElement>) => {
-        setDateText(event.target.value);
-    };
-
-    const handleRenderImage = async () => {
-        setExportInProgress(true);
-        await exportAndSaveImage(
-            `EXPORT_${topText}_${bottomText}.png`,
-            svgCanvasElement,
-        );
-        setExportInProgress(false);
-    };
 
     return (
         <Flex align={"center"} gap={"5rem"}>
@@ -63,23 +24,29 @@ export const Editor = (): ReactNode => {
                     <Center>
                         <Title>🌄 Pantonify</Title>
                     </Center>
-                    <TextInput
-                        label={"Title"}
-                        value={topText}
-                        placeholder={"Pantone"}
-                        onChange={handleTopTextChange}
+                    <ConfigTextInput
+                        property={"topText"}
+                        setter={"setTopText"}
+                        inputProps={{
+                            label: "Title",
+                            placeholder: "PANTONE",
+                        }}
                     />
-                    <TextInput
-                        label={"Subtitle"}
-                        value={bottomText}
-                        placeholder={"Sub Title"}
-                        onChange={handleBottomTextChange}
+                    <ConfigTextInput
+                        property={"bottomText"}
+                        setter={"setBottomText"}
+                        inputProps={{
+                            label: "Subtitle",
+                            placeholder: "Sub Title",
+                        }}
                     />
-                    <TextInput
-                        label={"Date"}
-                        value={dateText}
-                        placeholder={"Date text"}
-                        onChange={handleDateTextChange}
+                    <ConfigTextInput
+                        property={"dateText"}
+                        setter={"setDateText"}
+                        inputProps={{
+                            label: "Date",
+                            placeholder: "2024",
+                        }}
                     />
                     <MarginSelector />
                     <Accordion>
@@ -94,23 +61,8 @@ export const Editor = (): ReactNode => {
                             </Accordion.Panel>
                         </Accordion.Item>
                     </Accordion>
-                    <Button
-                        onClick={handleRenderImage}
-                        disabled={exportInProgress}
-                    >
-                        {!exportInProgress ? (
-                            "Export as PNG..."
-                        ) : (
-                            <Group align={"center"} gap={"lg"}>
-                                <Text c={"white"}>Exporting</Text>
-                                <Loader
-                                    type={"dots"}
-                                    color={"white"}
-                                    size={"sm"}
-                                />
-                            </Group>
-                        )}
-                    </Button>
+                    <ExportButton svgCanvasElementRef={svgCanvasElement} />
+                    <EstimatedFilesizeDisplay />
                 </Stack>
             </Center>
         </Flex>

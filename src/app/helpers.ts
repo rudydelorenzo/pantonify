@@ -327,3 +327,11 @@ export const computeMaximumOffsets = (
         h: -(finalImageDimensions.height - imageFrameSize.h),
     };
 };
+
+export const calculateImageSizeMb = (size: Size): number => {
+    const megaPixels = (size.w * size.h) / 1_000_000;
+    const megaBits = megaPixels * 32;
+    const megaBytes = megaBits / 8;
+    const ESTIMATED_COMPRESSION_FACTOR = 0.25;
+    return megaBytes * ESTIMATED_COMPRESSION_FACTOR;
+};

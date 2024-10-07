@@ -14,7 +14,7 @@ import {
 } from "@/app/helpers";
 import { useCanvasStore } from "@/app/stores/canvas";
 
-type ConfigStoreState = {
+export type ConfigStoreState = {
     image: null | ImageType;
     topText: string;
     bottomText: string;
@@ -26,7 +26,7 @@ type ConfigStoreState = {
     offsets: Size;
 };
 
-type ConfigStoreAction = {
+export type ConfigStoreAction = {
     setImage: (url: string | null) => Promise<void>;
     setTopText: (text: ConfigStoreState["topText"]) => void;
     setBottomText: (text: ConfigStoreState["bottomText"]) => void;
