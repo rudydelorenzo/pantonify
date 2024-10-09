@@ -2,7 +2,12 @@
 
 import { ReactNode, RefObject, MouseEvent, useRef } from "react";
 import { Size } from "@/app/types";
-import { DEFAULT_MARGIN_SIZE, MARGIN_PRESETS, UNITS } from "@/app/constants";
+import {
+    DEFAULT_MARGIN_SIZE,
+    MARGIN_PRESETS,
+    UNITS,
+    ZOOM_STEP_SIZE,
+} from "@/app/constants";
 import { SvgText } from "@/app/components/wrappers/SvgText";
 import { useCanvasStore } from "@/app/stores/canvas";
 import {
@@ -16,6 +21,7 @@ import {
 import useDrag from "@/app/hooks/useDrag";
 import { Center, Text } from "@mantine/core";
 import { useConfigStore } from "@/app/stores/config";
+import useScroll from "@/app/hooks/useScroll";
 
 const MOVEMENT_SPEED_MULTIPLIER = 7;
 
@@ -32,7 +38,9 @@ export const ArtDisplay = ({
         dateText,
         margin,
         offsets,
+        zoom,
         setOffsets,
+        setZoom,
     } = useConfigStore();
     const imageElementRef = useRef<SVGImageElement>(null);
 
@@ -42,8 +50,17 @@ export const ArtDisplay = ({
         setOffsets({ h: newH, w: newW }, undefined);
     };
 
+    const handleScroll = (e: WheelEvent) => {
+        if (e.deltaY < 0) setZoom(zoom + ZOOM_STEP_SIZE);
+        else if (e.deltaY > 0) setZoom(zoom - ZOOM_STEP_SIZE);
+    };
+
     useDrag(imageElementRef, [offsets], {
         onDrag: handleDrag,
+    });
+
+    useScroll(imageElementRef, [zoom], {
+        onScroll: handleScroll,
     });
 
     const shouldRender = image && image.url && pixelSize;
@@ -101,7 +118,7 @@ export const ArtDisplay = ({
                 ref={imageElementRef}
                 x={margin.pixels.w + offsets.w}
                 y={margin.pixels.h + offsets.h}
-                {...computeImageDimensions(image.size, imageFrameSize)}
+                {...computeImageDimensions(image.size, imageFrameSize, zoom)}
                 clipPath={"url(#image-mask)"}
                 style={{ cursor: "move" }}
             />

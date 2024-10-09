@@ -294,6 +294,7 @@ export const getImageFrameSize = (pixelSize: Size, marginSize: Size): Size => {
 export const computeImageDimensions = (
     imageSize: Size,
     imageFrameSize: Size,
+    zoom: number,
 ): { width: number; height: number } => {
     // Calculate the aspect ratios
     const imageAspectRatio = imageSize.w / imageSize.h;
@@ -310,16 +311,18 @@ export const computeImageDimensions = (
         finalWidth = imageFrameSize.w;
         finalHeight = imageFrameSize.w / imageAspectRatio;
     }
-    return { width: finalWidth, height: finalHeight };
+    return { width: finalWidth * zoom, height: finalHeight * zoom };
 };
 
 export const computeMaximumOffsets = (
     imageSize: Size,
     imageFrameSize: Size,
+    zoom: number,
 ): Size => {
     const finalImageDimensions = computeImageDimensions(
         imageSize,
         imageFrameSize,
+        zoom,
     );
 
     return {

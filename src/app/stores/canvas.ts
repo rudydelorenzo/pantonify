@@ -41,7 +41,7 @@ export const useCanvasStore = create<CanvasStoreState & CanvasStoreAction>(
                 ? getPixelSizeFromPPI(physicalSize, ppi)
                 : undefined;
             const configState = useConfigStore.getState();
-            configState.setOffsets(configState.offsets, pixelSize);
+            configState.setOffsets(configState.offsets, { pixelSize });
             set(() => {
                 return {
                     pixelSize: pixelSize || null,

@@ -4,7 +4,9 @@ import {
     DEFAULT_MARGIN_SIZE,
     DEFAULT_PPI,
     DEFAULT_UNIT,
+    DEFAULT_ZOOM,
     MARGIN_PRESETS,
+    MIN_ZOOM,
 } from "@/app/constants";
 import {
     computeMaximumOffsets,
@@ -24,6 +26,7 @@ export type ConfigStoreState = {
         pixels: Size;
     };
     offsets: Size;
+    zoom: number;
 };
 
 export type ConfigStoreAction = {
@@ -34,8 +37,12 @@ export type ConfigStoreAction = {
     setMargin: (amount: ValueWithUnit, ppi: undefined | number) => void;
     setOffsets: (
         offsets: ConfigStoreState["offsets"],
-        pixelSize: Size | undefined,
+        dependencies?: {
+            pixelSize?: Size;
+            zoom?: ConfigStoreState["zoom"];
+        },
     ) => void;
+    setZoom: (zoom: ConfigStoreState["zoom"]) => void;
 };
 
 export const useConfigStore = create<ConfigStoreState & ConfigStoreAction>(
@@ -58,6 +65,7 @@ export const useConfigStore = create<ConfigStoreState & ConfigStoreAction>(
             },
         },
         offsets: { w: 0, h: 0 },
+        zoom: DEFAULT_ZOOM,
         setImage: async (url) => {
             if (!url) {
                 set(() => ({ image: null }));
@@ -96,18 +104,22 @@ export const useConfigStore = create<ConfigStoreState & ConfigStoreAction>(
                 };
             });
         },
-        setOffsets: (prospectiveOffsets, pixelSize) => {
+        setOffsets: (prospectiveOffsets, dependencies = {}) => {
             set((state) => {
-                if (!pixelSize)
-                    pixelSize =
-                        useCanvasStore.getState().pixelSize || undefined;
+                const pixelSize = dependencies.pixelSize
+                    ? dependencies.pixelSize
+                    : useCanvasStore.getState().pixelSize || undefined;
+                const zoom = dependencies.zoom ? dependencies.zoom : state.zoom;
+
                 if (!state.image || !pixelSize)
                     return {
                         offsets: { w: 0, h: 0 },
                     };
+
                 const maxOffsets = computeMaximumOffsets(
                     state.image.size,
                     getImageFrameSize(pixelSize, state.margin.pixels),
+                    zoom,
                 );
                 const offsets = {
                     w: Math.min(
@@ -121,6 +133,16 @@ export const useConfigStore = create<ConfigStoreState & ConfigStoreAction>(
                 };
                 return {
                     offsets,
+                };
+            });
+        },
+        setZoom: (zoom) => {
+            // clamp zoom to minimum
+            zoom = Math.max(zoom, MIN_ZOOM);
+            set((state) => {
+                state.setOffsets(state.offsets, { zoom });
+                return {
+                    zoom: zoom,
                 };
             });
         },

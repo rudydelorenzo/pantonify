@@ -8,6 +8,10 @@ export const SRC_URL_REGEX = /src:\s*url\(['"]?([^'")]+)['"]?\)/;
 
 export const DEFAULT_PPI = 300;
 
+export const DEFAULT_ZOOM = 1.0;
+export const MIN_ZOOM = 1.0;
+export const ZOOM_STEP_SIZE = 0.01;
+
 export const UNITS = {
     cm: "cm",
     in: "in",
