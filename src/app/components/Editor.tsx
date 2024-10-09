@@ -7,7 +7,10 @@ import { OrientationSelector } from "@/app/components/editor/OrientationSelector
 import { PrintSizeSelector } from "@/app/components/editor/PrintSizeSelector";
 import { EstimatedFilesizeDisplay } from "@/app/components/editor/EstimatedFilesizeDisplay";
 import { ExportButton } from "@/app/components/editor/ExportButton";
-import { ConfigTextInput } from "@/app/components/editor/ConfigTextInput";
+import { StatefulTextInput } from "@/app/components/wrappers/StatefulTextInput";
+import { useConfigStore } from "@/app/stores/config";
+import { StatefulNumberInput } from "@/app/components/wrappers/StatefulNumberInput";
+import { useCanvasStore } from "@/app/stores/canvas";
 
 export const Editor = (): ReactNode => {
     const svgCanvasElement = useRef<SVGSVGElement | null>(null);
@@ -24,7 +27,8 @@ export const Editor = (): ReactNode => {
                     <Center>
                         <Title>🌄 Pantonify</Title>
                     </Center>
-                    <ConfigTextInput
+                    <StatefulTextInput
+                        store={useConfigStore}
                         property={"topText"}
                         setter={"setTopText"}
                         inputProps={{
@@ -32,7 +36,8 @@ export const Editor = (): ReactNode => {
                             placeholder: "PANTONE",
                         }}
                     />
-                    <ConfigTextInput
+                    <StatefulTextInput
+                        store={useConfigStore}
                         property={"bottomText"}
                         setter={"setBottomText"}
                         inputProps={{
@@ -40,7 +45,8 @@ export const Editor = (): ReactNode => {
                             placeholder: "Sub Title",
                         }}
                     />
-                    <ConfigTextInput
+                    <StatefulTextInput
+                        store={useConfigStore}
                         property={"dateText"}
                         setter={"setDateText"}
                         inputProps={{
@@ -58,6 +64,15 @@ export const Editor = (): ReactNode => {
                                 <UnitSelector />
                                 <OrientationSelector />
                                 <PrintSizeSelector />
+                                <StatefulNumberInput
+                                    store={useCanvasStore}
+                                    property={"ppi"}
+                                    setter={"setPPI"}
+                                    inputProps={{
+                                        label: "PPI (Beta)",
+                                        suffix: " ppi",
+                                    }}
+                                />
                             </Accordion.Panel>
                         </Accordion.Item>
                     </Accordion>

@@ -60,10 +60,8 @@ export const useCanvasStore = create<CanvasStoreState & CanvasStoreAction>(
             set((state) => {
                 // change margins
                 const configStore = useConfigStore.getState();
-                configStore.setMargin(configStore.margin.withUnits, undefined);
-
+                configStore.setMargin(configStore.margin.withUnits, ppi);
                 state._setPixelSize(state.printSize, ppi);
-
                 return {
                     ppi: ppi,
                 };
