@@ -54,12 +54,6 @@ export const Editor = (): ReactNode => {
                             placeholder: "2024",
                         }}
                     />
-                    <StatefulNumberInput
-                        store={useConfigStore}
-                        property={"zoom"}
-                        setter={"setZoom"}
-                        inputProps={{ step: 0.1, label: "Zoom", suffix: " x" }}
-                    />
                     <MarginSelector />
                     <Accordion>
                         <Accordion.Item value={"More settings"}>
