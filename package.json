@@ -15,6 +15,7 @@
     "@mantine/core": "^7.12.2",
     "@mantine/hooks": "^7.12.2",
     "@tabler/icons-react": "^3.19.0",
+    "canvas": "^2.11.2",
     "lodash": "^4.17.21",
     "next": "14.2.11",
     "react": "^18",

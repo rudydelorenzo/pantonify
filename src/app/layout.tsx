@@ -5,8 +5,8 @@ import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 import { helveticaNeue } from "@/app/fonts";
 
 export const metadata: Metadata = {
-    title: "🌄 Pantonify",
-    description: "A tool to put your art into a pantone color chip",
+    title: "Pantonify",
+    description: "Put your art into a pantone color chip",
 };
 
 export default function RootLayout({
@@ -17,6 +17,7 @@ export default function RootLayout({
     return (
         <html lang="en">
             <head>
+                <link rel="icon" href="/api/favicon" sizes="any" />
                 <ColorSchemeScript />
             </head>
             <body className={helveticaNeue.className}>
