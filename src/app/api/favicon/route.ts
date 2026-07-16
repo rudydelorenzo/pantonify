@@ -5,6 +5,8 @@ const w = 40,
 
 const RETURN_MIME = "image/png";
 
+export const dynamic = "force-dynamic"; // Prevents Next.js from caching this route
+
 export async function GET() {
     const canvas = createCanvas(w, h);
     const ctx = canvas.getContext("2d");
@@ -22,6 +24,3 @@ export async function GET() {
 
     return new Response(dataFile, { headers: { "content-type": RETURN_MIME } });
 }
-
-// next line disables Next.js caching when in production (makes route render on-demand)
-export const revalidate = 0;
